@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-forest-900: #07221b;
+    --color-forest-800: #0f382c;
+    --color-forest-700: #154d3d;
+    --color-forest-600: #1b634f;
+    --color-forest-500: #227c63;
+    --color-emerald-500: #10b981;
+    --color-emerald-600: #059669;
+    --color-gold-500: #f59e0b;
+    --color-gold-600: #d97706;
+  }
+
+  body {
+    background-color: #071510;
+    color: #f3f4f6;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #091a14;
+}
+::-webkit-scrollbar-thumb {
+  background: #19483a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #256b57;
+}
+
+/* Glassmorphism & UI Utilities */
+.glass-card {
+  background: rgba(15, 56, 44, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 124, 99, 0.25);
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-hover:hover {
+  background: rgba(21, 77, 61, 0.6);
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(16, 185, 129, 0.15);
+}
+
+.glass-panel {
+  background: rgba(9, 26, 20, 0.85);
+  border: 1px solid rgba(27, 99, 79, 0.3);
+}
+
+/* Dynamic Glowing Effects */
+.glow-emerald {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+.glow-gold {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+}
+
+.glow-platinum {
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+}
+
+/* Certificate Styles */
+.certificate-border {
+  border: 12px double #10b981;
+  background: linear-gradient(135deg, #091d16 0%, #0d2c22 50%, #071712 100%);
+  position: relative;
+}
+
+/* Badges */
+.badge-platinum {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.badge-gold {
+  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+  color: #1e1b4b;
+  font-weight: 700;
+}
+
+.badge-silver {
+  background: linear-gradient(135deg, #475569 0%, #94a3b8 100%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.badge-below {
+  background: linear-gradient(135deg, #991b1b 0%, #f87171 100%);
+  color: #ffffff;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
