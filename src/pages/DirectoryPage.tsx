@@ -188,44 +188,70 @@ export const DirectoryPage: React.FC<DirectoryPageProps> = ({ onVerifyId }) => {
             <div
               key={evt.event_id}
               onClick={() => setSelectedEventModal(evt)}
-              className="p-6 rounded-2xl glass-card glass-card-hover border border-emerald-800/40 cursor-pointer space-y-4 flex flex-col justify-between"
+              className="rounded-2xl glass-card glass-card-hover border border-emerald-800/40 cursor-pointer overflow-hidden flex flex-col justify-between group transition-all"
             >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getBadgeClass(evt.certification_level)}`}>
-                    {evt.certification_level || 'AUDITED'}
-                  </span>
-                  <span className="text-xs font-mono text-emerald-400 font-semibold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                    ID: {evt.event_id}
-                  </span>
+              {/* Event Image Banner */}
+              {evt.image_url ? (
+                <div className="relative h-44 w-full overflow-hidden bg-emerald-950">
+                  <img
+                    src={evt.image_url}
+                    alt={evt.event_name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/20 to-transparent" />
+                  <div className="absolute top-3 left-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getBadgeClass(evt.certification_level)}`}>
+                      {evt.certification_level || 'AUDITED'}
+                    </span>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <span className="text-xs font-mono text-emerald-300 font-semibold bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-800 shadow">
+                      ID: {evt.event_id}
+                    </span>
+                  </div>
                 </div>
+              ) : null}
 
-                <h3 className="text-lg font-bold text-white leading-snug hover:text-emerald-300 transition-colors">
-                  {evt.event_name}
-                </h3>
-
-                <div className="space-y-1 text-xs text-emerald-200/70">
-                  <p className="flex items-center space-x-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{evt.club_name}</span>
-                  </p>
-                  <p className="flex items-center space-x-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{evt.date} • {evt.venue}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-emerald-800/40 flex items-center justify-between">
+              <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] text-emerald-400 uppercase font-semibold block">Green Score</span>
-                  <span className="text-2xl font-black text-white">{evt.green_score} <span className="text-xs font-normal text-emerald-400">/ 100</span></span>
+                  {!evt.image_url && (
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getBadgeClass(evt.certification_level)}`}>
+                        {evt.certification_level || 'AUDITED'}
+                      </span>
+                      <span className="text-xs font-mono text-emerald-400 font-semibold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+                        ID: {evt.event_id}
+                      </span>
+                    </div>
+                  )}
+
+                  <h3 className="text-lg font-bold text-white leading-snug group-hover:text-emerald-300 transition-colors">
+                    {evt.event_name}
+                  </h3>
+
+                  <div className="space-y-1 text-xs text-emerald-200/70 mt-2">
+                    <p className="flex items-center space-x-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{evt.club_name}</span>
+                    </p>
+                    <p className="flex items-center space-x-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{evt.date} • {evt.venue}</span>
+                    </p>
+                  </div>
                 </div>
 
-                <button className="px-3 py-1.5 rounded-lg bg-emerald-800/60 hover:bg-emerald-700 text-emerald-100 text-xs font-semibold flex items-center space-x-1 transition-colors">
-                  <span>Scorecard</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="pt-4 border-t border-emerald-800/40 flex items-center justify-between mt-3">
+                  <div>
+                    <span className="text-[10px] text-emerald-400 uppercase font-semibold block">Green Score</span>
+                    <span className="text-2xl font-black text-white">{evt.green_score} <span className="text-xs font-normal text-emerald-400">/ 100</span></span>
+                  </div>
+
+                  <button className="px-3 py-1.5 rounded-lg bg-emerald-800/60 hover:bg-emerald-700 text-emerald-100 text-xs font-semibold flex items-center space-x-1 transition-colors">
+                    <span>Scorecard</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -244,6 +270,21 @@ export const DirectoryPage: React.FC<DirectoryPageProps> = ({ onVerifyId }) => {
               <X className="w-5 h-5" />
             </button>
 
+            {/* Event Banner in Modal */}
+            {selectedEventModal.image_url && (
+              <div className="relative h-48 w-full rounded-2xl overflow-hidden border border-emerald-700/60 shadow-lg">
+                <img
+                  src={selectedEventModal.image_url}
+                  alt={selectedEventModal.event_name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/30 to-transparent" />
+                <div className="absolute bottom-3 left-3 text-xs text-emerald-200 font-semibold drop-shadow">
+                  {selectedEventModal.event_type} • {selectedEventModal.venue}
+                </div>
+              </div>
+            )}
+
             {/* Modal Header */}
             <div className="space-y-2 pr-8">
               <div className="flex items-center space-x-2">
@@ -255,6 +296,7 @@ export const DirectoryPage: React.FC<DirectoryPageProps> = ({ onVerifyId }) => {
               <h2 className="text-2xl font-bold text-white">{selectedEventModal.event_name}</h2>
               <p className="text-xs text-emerald-300">{selectedEventModal.club_name} | Date: {selectedEventModal.date}</p>
             </div>
+
 
             {/* Score Summary Box */}
             <div className="p-4 rounded-2xl bg-emerald-900/40 border border-emerald-700/50 flex items-center justify-between">

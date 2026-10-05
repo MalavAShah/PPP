@@ -14,7 +14,8 @@ import {
   ScoringWeights, 
   CertificationThresholds,
   CertificationLevel,
-  EventStatus
+  EventStatus,
+  ROLE_PASSWORDS
 } from '../types';
 import { 
   DEMO_USERS, 
@@ -28,6 +29,8 @@ import {
   DEFAULT_WEIGHTS,
   DEFAULT_THRESHOLDS
 } from '../services/mockData';
+import { RoleAuthModal } from '../components/RoleAuthModal';
+
 
 interface AppContextType {
   currentUser: User;
@@ -44,6 +47,15 @@ interface AppContextType {
   notifications: NotificationItem[];
   weights: ScoringWeights;
   thresholds: CertificationThresholds;
+
+  // Role Authentication
+  unlockedRoles: Record<UserRole, boolean>;
+  authModalTargetRole: UserRole | null;
+  openRoleAuthModal: (role: UserRole, onSuccess?: () => void) => void;
+  closeRoleAuthModal: () => void;
+  verifyAndUnlockRole: (role: UserRole, password: string) => { success: boolean; error?: string };
+  switchRoleWithProtection: (role: UserRole, onSuccess?: () => void) => void;
+  lockRole: (role?: UserRole) => void;
   
   // Actions
   createEvent: (eventData: Omit<EventItem, 'event_id' | 'created_at' | 'updated_at' | 'status' | 'semester' | 'academic_year'> & Partial<Pick<EventItem, 'semester' | 'academic_year'>>) => EventItem;
@@ -63,11 +75,49 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Role Authentication state
+  const [unlockedRoles, setUnlockedRoles] = useState<Record<UserRole, boolean>>(() => {
+    try {
+      const saved = sessionStorage.getItem('gecf_unlockedRoles');
+      return saved ? JSON.parse(saved) : {
+        PUBLIC: true,
+        CLUB_ORGANIZER: false,
+        AUDITOR: false,
+        SUSTAINABILITY_COMMITTEE: false,
+        ADMIN: false,
+      };
+    } catch {
+      return {
+        PUBLIC: true,
+        CLUB_ORGANIZER: false,
+        AUDITOR: false,
+        SUSTAINABILITY_COMMITTEE: false,
+        ADMIN: false,
+      };
+    }
+  });
+
+  const [authModalTargetRole, setAuthModalTargetRole] = useState<UserRole | null>(null);
+  const [authModalCallback, setAuthModalCallback] = useState<(() => void) | null>(null);
+
   // Load from localStorage or initialize defaults
   const [currentUser, setCurrentUser] = useState<User>(() => {
-    const saved = localStorage.getItem('gecf_currentUser');
-    return saved ? JSON.parse(saved) : DEMO_USERS[0];
+    try {
+      const saved = localStorage.getItem('gecf_currentUser');
+      if (saved) {
+        const parsed: User = JSON.parse(saved);
+        const savedUnlocked = sessionStorage.getItem('gecf_unlockedRoles');
+        const unlockedMap: Record<string, boolean> = savedUnlocked ? JSON.parse(savedUnlocked) : {};
+        if (parsed.role === 'PUBLIC' || unlockedMap[parsed.role]) {
+          return parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return DEMO_USERS[0]; // Public Visitor
   });
+
 
   const [events, setEvents] = useState<EventItem[]>(() => {
     const saved = localStorage.getItem('gecf_events');
@@ -161,12 +211,80 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [thresholds]);
 
   // Action helpers
-  const setCurrentUserRole = (role: UserRole) => {
-    const match = DEMO_USERS.find(u => u.role === role);
-    if (match) {
-      setCurrentUser(match);
-      addNotification('Role Switched', `You are now viewing GECF as ${match.name} (${role.replace('_', ' ')})`, 'info');
+  const openRoleAuthModal = (role: UserRole, onSuccess?: () => void) => {
+    setAuthModalTargetRole(role);
+    setAuthModalCallback(() => (onSuccess ? onSuccess : null));
+  };
+
+  const closeRoleAuthModal = () => {
+    setAuthModalTargetRole(null);
+    setAuthModalCallback(null);
+  };
+
+  const verifyAndUnlockRole = (role: UserRole, password: string): { success: boolean; error?: string } => {
+    if (role === 'PUBLIC') {
+      const publicUser = DEMO_USERS.find(u => u.role === 'PUBLIC') || DEMO_USERS[0];
+      setCurrentUser(publicUser);
+      return { success: true };
     }
+
+    const expected = ROLE_PASSWORDS[role as Exclude<UserRole, 'PUBLIC'>];
+    if (password.trim() === expected) {
+      const updated = { ...unlockedRoles, [role]: true };
+      setUnlockedRoles(updated);
+      try {
+        sessionStorage.setItem('gecf_unlockedRoles', JSON.stringify(updated));
+      } catch {}
+
+      const match = DEMO_USERS.find(u => u.role === role) || currentUser;
+      setCurrentUser(match);
+      logAction('ROLE_AUTHENTICATED', 'AUTH', role, `Authenticated as ${match.name} (${role})`);
+      addNotification('Role Unlocked', `Access granted as ${match.name} (${role.replace('_', ' ')})`, 'success');
+      return { success: true };
+    } else {
+      return { success: false, error: `Incorrect password for ${role.replace('_', ' ')}. Please try again.` };
+    }
+  };
+
+  const switchRoleWithProtection = (role: UserRole, onSuccess?: () => void) => {
+    if (role === 'PUBLIC') {
+      const publicUser = DEMO_USERS.find(u => u.role === 'PUBLIC') || DEMO_USERS[0];
+      setCurrentUser(publicUser);
+      addNotification('Role Switched', 'Viewing in Public Visitor mode.', 'info');
+      if (onSuccess) onSuccess();
+      return;
+    }
+
+    if (unlockedRoles[role]) {
+      const match = DEMO_USERS.find(u => u.role === role);
+      if (match) {
+        setCurrentUser(match);
+        addNotification('Role Switched', `Active user: ${match.name} (${role.replace('_', ' ')})`, 'info');
+      }
+      if (onSuccess) onSuccess();
+    } else {
+      openRoleAuthModal(role, onSuccess);
+    }
+  };
+
+  const lockRole = (role?: UserRole) => {
+    const target = role || currentUser.role;
+    if (target === 'PUBLIC') return;
+
+    const updated = { ...unlockedRoles, [target]: false };
+    setUnlockedRoles(updated);
+    try {
+      sessionStorage.setItem('gecf_unlockedRoles', JSON.stringify(updated));
+    } catch {}
+
+    const publicUser = DEMO_USERS.find(u => u.role === 'PUBLIC') || DEMO_USERS[0];
+    setCurrentUser(publicUser);
+    logAction('ROLE_LOCKED', 'AUTH', target, `Locked role: ${target}`);
+    addNotification('Role Locked', `Locked ${target.replace('_', ' ')}. Switched to Public Visitor mode.`, 'info');
+  };
+
+  const setCurrentUserRole = (role: UserRole) => {
+    switchRoleWithProtection(role);
   };
 
   const addNotification = (title: string, message: string, type: NotificationItem['type'] = 'info') => {
@@ -396,6 +514,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetDemoData = () => {
     localStorage.clear();
+    sessionStorage.clear();
     setEvents(INITIAL_EVENTS);
     setEvidenceList(INITIAL_EVIDENCE);
     setCertificates(INITIAL_CERTIFICATES);
@@ -403,7 +522,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWeights(DEFAULT_WEIGHTS);
     setThresholds(DEFAULT_THRESHOLDS);
     setCurrentUser(DEMO_USERS[0]);
-    addNotification('Demo Data Reset', 'Restored original demo events, evidence and certificates.', 'info');
+    setUnlockedRoles({
+      PUBLIC: true,
+      CLUB_ORGANIZER: false,
+      AUDITOR: false,
+      SUSTAINABILITY_COMMITTEE: false,
+      ADMIN: false,
+    });
+    addNotification('Demo Data Reset', 'Restored original demo events, evidence, certificates and security locks.', 'info');
   };
 
   return (
@@ -423,6 +549,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications,
         weights,
         thresholds,
+        unlockedRoles,
+        authModalTargetRole,
+        openRoleAuthModal,
+        closeRoleAuthModal,
+        verifyAndUnlockRole,
+        switchRoleWithProtection,
+        lockRole,
         createEvent,
         updateEventStatus,
         submitEventResponse,
@@ -438,9 +571,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }}
     >
       {children}
+
+      {/* App-Wide Role Authentication Modal */}
+      <RoleAuthModal
+        isOpen={authModalTargetRole !== null}
+        targetRole={authModalTargetRole}
+        onClose={closeRoleAuthModal}
+        onSuccess={() => {
+          if (authModalCallback) {
+            authModalCallback();
+          }
+        }}
+      />
     </AppContext.Provider>
   );
 };
+
 
 export const useApp = () => {
   const context = useContext(AppContext);

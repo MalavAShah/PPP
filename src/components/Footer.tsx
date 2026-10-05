@@ -1,7 +1,10 @@
 import React from 'react';
 import { ShieldCheck, Leaf, ExternalLink, Globe } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export const Footer: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setActiveTab }) => {
+  const { switchRoleWithProtection } = useApp();
+
   return (
     <footer className="w-full border-t border-emerald-900/40 bg-emerald-950/90 text-emerald-300/80 py-12 px-4 sm:px-6 lg:px-8 mt-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -64,18 +67,27 @@ export const Footer: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setA
               </button>
             </li>
             <li>
-              <button onClick={() => setActiveTab('club')} className="hover:text-emerald-200 transition-colors">
-                Club Organizer Portal
+              <button 
+                onClick={() => switchRoleWithProtection('CLUB_ORGANIZER', () => setActiveTab('club'))} 
+                className="hover:text-emerald-200 transition-colors"
+              >
+                Club Organizer Portal 🔒
               </button>
             </li>
             <li>
-              <button onClick={() => setActiveTab('auditor')} className="hover:text-emerald-200 transition-colors">
-                Green Auditor Desk
+              <button 
+                onClick={() => switchRoleWithProtection('AUDITOR', () => setActiveTab('auditor'))} 
+                className="hover:text-emerald-200 transition-colors"
+              >
+                Green Auditor Desk 🔒
               </button>
             </li>
             <li>
-              <button onClick={() => setActiveTab('dashboard')} className="hover:text-emerald-200 transition-colors">
-                Institutional Analytics
+              <button 
+                onClick={() => switchRoleWithProtection('SUSTAINABILITY_COMMITTEE', () => setActiveTab('dashboard'))} 
+                className="hover:text-emerald-200 transition-colors"
+              >
+                Institutional Analytics 🔒
               </button>
             </li>
           </ul>

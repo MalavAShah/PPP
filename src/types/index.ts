@@ -160,6 +160,7 @@ export interface EventItem {
   waste_management_plan: string;
   water_arrangements: string;
   intended_categories: string[];
+  image_url?: string;
   
   status: EventStatus;
   green_score?: number;
@@ -186,3 +187,19 @@ export interface CertificationThresholds {
   gold: number;
   silver: number;
 }
+
+export const ROLE_PASSWORDS: Record<Exclude<UserRole, 'PUBLIC'>, string> = {
+  CLUB_ORGANIZER: 'club2026',
+  AUDITOR: 'audit2026',
+  SUSTAINABILITY_COMMITTEE: 'sustain2026',
+  ADMIN: 'admin2026',
+};
+
+export interface RoleInfo {
+  role: UserRole;
+  label: string;
+  desc: string;
+  requiresPassword: boolean;
+  defaultPassword?: string;
+}
+

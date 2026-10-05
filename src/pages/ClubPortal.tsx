@@ -21,8 +21,16 @@ import {
   Lightbulb,
   ShieldAlert,
   Eye,
-  Award
+  Award,
+  Image as ImageIcon
 } from 'lucide-react';
+
+const PRESET_EVENT_IMAGES = [
+  { name: 'Eco Conclave', url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80' },
+  { name: 'Green Hackathon', url: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80' },
+  { name: 'Ventures Summit', url: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop&q=80' },
+  { name: 'Eco-Cultural Fest', url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80' },
+];
 
 interface ClubPortalProps {
   isRegisterModalOpen: boolean;
@@ -65,8 +73,20 @@ export const ClubPortal: React.FC<ClubPortalProps> = ({ isRegisterModalOpen, set
     material_requirements: 'Jute delegate bags and seed pencils.',
     waste_management_plan: '3-bin waste segregation + biogas plant transfer.',
     water_arrangements: '50L water dispensers with copper cups.',
-    intended_categories: ['cat-waste', 'cat-food', 'cat-paper', 'cat-procurement', 'cat-social', 'cat-innovation']
+    intended_categories: ['cat-waste', 'cat-food', 'cat-paper', 'cat-procurement', 'cat-social', 'cat-innovation'],
+    image_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80'
   });
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image_url: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Simulated Evidence File Upload State
   const [selectedCritForUpload, setSelectedCritForUpload] = useState<Criterion | null>(null);
@@ -209,8 +229,19 @@ export const ClubPortal: React.FC<ClubPortalProps> = ({ isRegisterModalOpen, set
                 {myEvents.map(evt => (
                   <tr key={evt.event_id} className="hover:bg-emerald-900/30 transition-colors">
                     <td className="py-4 px-4">
-                      <div className="font-bold text-white text-sm">{evt.event_name}</div>
-                      <div className="text-[11px] text-emerald-300/60">{evt.club_name} • ID: {evt.event_id}</div>
+                      <div className="flex items-center space-x-3">
+                        {evt.image_url ? (
+                          <img src={evt.image_url} alt={evt.event_name} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-emerald-700/50 shadow-sm" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-emerald-900/60 border border-emerald-800 flex items-center justify-center shrink-0 text-emerald-400 font-bold text-xs">
+                            {evt.event_name[0] || 'E'}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-bold text-white text-sm">{evt.event_name}</div>
+                          <div className="text-[11px] text-emerald-300/60">{evt.club_name} • ID: {evt.event_id}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-4 px-4 text-emerald-200/80">
                       <div>{evt.date}</div>
@@ -510,6 +541,77 @@ export const ClubPortal: React.FC<ClubPortalProps> = ({ isRegisterModalOpen, set
                       className="w-full px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-700 text-white focus:outline-none"
                     />
                   </div>
+
+                  {/* ADD IMAGE OPTION IN REGISTER EVENT */}
+                  <div className="space-y-2 p-3.5 rounded-2xl bg-emerald-950/70 border border-emerald-800/60">
+                    <div className="flex items-center justify-between">
+                      <label className="text-emerald-300 font-bold flex items-center space-x-1.5">
+                        <ImageIcon className="w-4 h-4 text-emerald-400" />
+                        <span>Event Banner / Poster Image</span>
+                      </label>
+                      {formData.image_url && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image_url: '' })}
+                          className="text-[11px] text-red-400 hover:text-red-300 font-medium"
+                        >
+                          Clear Image
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Image Preview */}
+                    {formData.image_url ? (
+                      <div className="relative h-32 rounded-xl overflow-hidden border border-emerald-700/60 group">
+                        <img src={formData.image_url} alt="Event Poster" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 flex items-end p-2.5">
+                          <span className="text-white text-xs font-semibold drop-shadow">Poster Live Preview</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-24 rounded-xl border-2 border-dashed border-emerald-800/80 bg-emerald-900/10 flex flex-col items-center justify-center text-emerald-400/60 text-xs">
+                        <ImageIcon className="w-6 h-6 mb-1" />
+                        <span>No image selected yet</span>
+                      </div>
+                    )}
+
+                    {/* Image Upload from Device + Paste URL */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <label className="px-3 py-2 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-700/60 text-emerald-200 text-xs font-semibold cursor-pointer flex items-center justify-center space-x-2 transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Upload from Computer / Device</span>
+                        <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
+                      </label>
+
+                      <input
+                        type="url"
+                        placeholder="Or paste image URL (https://...)"
+                        value={formData.image_url.startsWith('data:') ? '' : formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        className="px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    {/* Preset Themes Selector */}
+                    <div className="pt-1">
+                      <span className="text-[10px] text-emerald-400/80 font-semibold block mb-1.5">Or Pick a Curated Theme Poster:</span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {PRESET_EVENT_IMAGES.map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, image_url: preset.url })}
+                            className={`p-1 rounded-lg border text-center transition-all ${
+                              formData.image_url === preset.url ? 'border-emerald-400 bg-emerald-800/50 shadow-sm' : 'border-emerald-800/60 hover:border-emerald-600 bg-emerald-950'
+                            }`}
+                          >
+                            <img src={preset.url} alt={preset.name} className="w-full h-8 rounded object-cover mb-0.5" />
+                            <span className="text-[9px] text-emerald-300 truncate block">{preset.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -587,6 +689,11 @@ export const ClubPortal: React.FC<ClubPortalProps> = ({ isRegisterModalOpen, set
                   <h3 className="font-bold text-sm text-emerald-200">Step 4 — Review & Lock Proposal</h3>
                   
                   <div className="p-4 rounded-xl bg-emerald-950 border border-emerald-800 space-y-2">
+                    {formData.image_url && (
+                      <div className="h-28 w-full rounded-xl overflow-hidden border border-emerald-700/60 mb-3">
+                        <img src={formData.image_url} alt="Event Review Poster" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     <p><strong className="text-emerald-400">Event:</strong> {formData.event_name}</p>
                     <p><strong className="text-emerald-400">Club:</strong> {formData.club_name}</p>
                     <p><strong className="text-emerald-400">Date & Venue:</strong> {formData.date} at {formData.venue}</p>

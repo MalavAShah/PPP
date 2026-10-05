@@ -28,7 +28,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenRegisterModal }) => {
-  const { setCurrentUserRole, weights, thresholds, events } = useApp();
+  const { switchRoleWithProtection, weights, thresholds, events } = useApp();
 
   const certifiedCount = events.filter(e => e.status === 'CERTIFIED').length;
   const avgScore = events.filter(e => e.green_score).reduce((acc, e) => acc + (e.green_score || 0), 0) / (events.filter(e => e.green_score).length || 1);
@@ -73,8 +73,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenRe
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
               onClick={() => {
-                setCurrentUserRole('CLUB_ORGANIZER');
-                onOpenRegisterModal();
+                switchRoleWithProtection('CLUB_ORGANIZER', () => {
+                  onOpenRegisterModal();
+                });
               }}
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-emerald-950 font-extrabold text-base shadow-lg shadow-emerald-900/40 transition-all transform hover:scale-[1.03] flex items-center justify-center space-x-2"
             >
@@ -394,8 +395,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenRe
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <button
             onClick={() => {
-              setCurrentUserRole('CLUB_ORGANIZER');
-              onOpenRegisterModal();
+              switchRoleWithProtection('CLUB_ORGANIZER', () => {
+                onOpenRegisterModal();
+              });
             }}
             className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-emerald-950 font-extrabold text-base shadow-xl transition-all hover:scale-105"
           >
